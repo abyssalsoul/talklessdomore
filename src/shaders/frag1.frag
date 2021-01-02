@@ -1,6 +1,5 @@
     uniform float iGlobalTime;
     uniform vec2 iResolution;
-    uniform vec4      iMouse;
     uniform sampler2D iChannel0;
     varying vec2 fragCoord;
     varying vec2 vUv;
@@ -26,7 +25,7 @@ vec3 pow3( vec3 z){
     return r2*z;
 }
 mat2 rot(float a) {
-    return mat2(cos(a),sin(a),-sin(a),cos(a));  
+    return mat2((a),sin(a),-sin(a),cos(a));  
 }
 float zoom=4.;
 float field(in vec3 p) {
@@ -60,9 +59,8 @@ void main()
     vec2 p = -1.0 + 2.0 * q;
     p.x *= iResolution.x/iResolution.y;
     vec2 m = vec2(0.);
-    if( iMouse.z>0.0 )m = iMouse.xy/iResolution.xy*3.14;
-    m-=.5;
-    vec3 ro = zoom*vec3(1.);
+     m-=.5;
+    vec3 ro = vec3(1.);
     ro.yz*=rot(m.y);
     ro.xz*=rot(m.x+ 0.1*time);
     vec3 ta = vec3( 0.0 , 0.0, 0.0 );

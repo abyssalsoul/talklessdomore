@@ -3,13 +3,15 @@
 </template>
 
 <script>
- import * as THREE from "three";
- import fragmentShader from "../shaders/logic.glsl";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
+import fragmentShader from "../shaders/frag1.frag";
+import vertexShader from "../shaders/vertex1.vert";
 let scene;
 let camera;
 let renderer;
 let plane;
-let sceneObjects = [];
+let controls;
 
 export default {
   name: "Three3d",
@@ -23,22 +25,22 @@ export default {
   },
   methods: {
     init() {
-        const canvas = document.querySelector("#c");
-        renderer = new THREE.WebGLRenderer({ canvas });
-        renderer.autoClearColor = false;
+      const canvas = document.querySelector("#c");
+      renderer = new THREE.WebGLRenderer({ canvas });
+      renderer.autoClearColor = false;
 
-        camera = new THREE.OrthographicCamera(
-          -1, // left
-          1, // right
-          1, // top
-          -1, // bottom
-          -1, // near,
-          1 // far
-        );
-        scene = new THREE.Scene();
-        plane = new THREE.PlaneBufferGeometry(2, 2);
-         
-        const uniforms = {
+      camera = new THREE.OrthographicCamera(
+        -100, // left
+        100, // right
+        100, // top
+        -100, // bottom
+        -100, // near,
+        100 // far
+      );
+      scene = new THREE.Scene();
+      plane = new THREE.PlaneBufferGeometry(200, 200);
+
+      /*  const uniforms = {
           iTime: { value: 0 },
           iResolution: { value: new THREE.Vector3() },
         };
@@ -46,36 +48,59 @@ export default {
         const material = new THREE.ShaderMaterial({
           fragmentShader,
           uniforms,
-        });
-        scene.add(new THREE.Mesh(plane, material));
+        }); */
 
-        function resizeRendererToDisplaySize(renderer) {
-          const canvas = renderer.domElement;
-          const width = canvas.clientWidth;
-          const height = canvas.clientHeight;
-          const needResize = canvas.width !== width || canvas.height !== height;
-          if (needResize) {
-            renderer.setSize(width, height, false);
-          }
-          return needResize;
+      const uniforms = {
+        iGlobalTime: {
+          type: "f",
+          value: 1.0,
+        },
+        iResolution: {
+          type: "v2",
+          value: new THREE.Vector2(),
+        },
+      };
+      const material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+      });
+
+      scene.add(new THREE.Mesh(plane, material));
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.25;
+      controls.enableZoom = true;
+      controls.autoRotate = true;
+
+      function resizeRendererToDisplaySize(renderer) {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if (needResize) {
+          renderer.setSize(width, height, false);
         }
+        return needResize;
+      }
 
-        function render(time) {
-          time *= 0.001; // convert to seconds
+      function render(time) {
+        time *= 0.001; // convert to seconds
 
-          resizeRendererToDisplaySize(renderer);
+        resizeRendererToDisplaySize(renderer);
 
-          const canvas = renderer.domElement;
-          uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
-          uniforms.iTime.value = time;
+        const canvas = renderer.domElement;
+        uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
+        uniforms.iGlobalTime.value = time;
 
-          renderer.render(scene, camera);
-
-          requestAnimationFrame(render);
-        }
-
+        renderer.render(scene, camera);
+        controls.update();
         requestAnimationFrame(render);
       }
+
+      requestAnimationFrame(render);
+    },
   },
 };
 </script>
@@ -86,5 +111,4 @@ export default {
   height: 100%;
   display: block;
 }
-
 </style>
