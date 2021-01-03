@@ -1,17 +1,22 @@
 <template>
-  <canvas id="c"></canvas>
+ <div id="container"></div>
 </template>
 
 <script>
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
-import fragmentShader from "../shaders/frag1.frag";
-import vertexShader from "../shaders/vertex1.vert";
-let scene;
-let camera;
-let renderer;
-let plane;
-let controls;
+
+  import Stats from 'three/examples/jsm/libs/stats.module.js';
+  import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js';
+  import { ImprovedNoise } from 'three/examples/jsm/math/ImprovedNoise.js';
+  import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+	import { RenderPass } from 'three/examples//jsm/postprocessing/RenderPass.js';
+	import { ShaderPass } from 'three/examples//jsm/postprocessing/ShaderPass.js';
+	import { RGBShiftShader } from 'three/examples//jsm/shaders/RGBShiftShader.js';
+	import { DotScreenShader } from 'three/examples//jsm/shaders/DotScreenShader.js';
+
+  let container, stats;
+  let camera, controls, scene, renderer,composer;
+  let mesh, texture;
 
 export default {
   name: "Three3d",
@@ -25,88 +30,186 @@ export default {
   },
   methods: {
     init() {
-      const canvas = document.querySelector("#c");
-      renderer = new THREE.WebGLRenderer({ canvas });
-      renderer.autoClearColor = false;
+    
+		  const worldWidth = 256, worldDepth = 256;
+			const clock = new THREE.Clock();
 
-      camera = new THREE.OrthographicCamera(
-        -100, // left
-        100, // right
-        100, // top
-        -100, // bottom
-        -100, // near,
-        100 // far
-      );
-      scene = new THREE.Scene();
-      plane = new THREE.PlaneBufferGeometry(200, 200);
+			init();
+			animate();
 
-      /*  const uniforms = {
-          iTime: { value: 0 },
-          iResolution: { value: new THREE.Vector3() },
-        };
-        console.log(fragmentShader);
-        const material = new THREE.ShaderMaterial({
-          fragmentShader,
-          uniforms,
-        }); */
+			function init() {
 
-      const uniforms = {
-        iGlobalTime: {
-          type: "f",
-          value: 1.0,
-        },
-        iResolution: {
-          type: "v2",
-          value: new THREE.Vector2(),
-        },
-      };
-      const material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: vertexShader,
-        fragmentShader: fragmentShader,
-      });
+				container = document.getElementById( 'container' );
 
-      scene.add(new THREE.Mesh(plane, material));
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
 
-      controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.25;
-      controls.enableZoom = true;
-      controls.autoRotate = true;
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0X13253D );
+				scene.fog = new THREE.FogExp2( 0X13253D, 0.0035 );
 
-      function resizeRendererToDisplaySize(renderer) {
-        const canvas = renderer.domElement;
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        const needResize = canvas.width !== width || canvas.height !== height;
-        if (needResize) {
-          renderer.setSize(width, height, false);
-        }
-        return needResize;
-      }
+				const data = generateHeight( worldWidth, worldDepth );
 
-      function render(time) {
-        time *= 0.001; // convert to seconds
+				camera.position.set( 100, 800, - 800 );
+				camera.lookAt( - 100, 810, - 800 );
 
-        resizeRendererToDisplaySize(renderer);
+				const geometry = new THREE.PlaneBufferGeometry( 7500, 7500, worldWidth - 1, worldDepth - 1 );
+        geometry.rotateX( - Math.PI / 2 );
+      
+				const vertices = geometry.attributes.position.array;
 
-        const canvas = renderer.domElement;
-        uniforms.iResolution.value.set(canvas.width, canvas.height, 1);
-        uniforms.iGlobalTime.value = time;
+				for ( let i = 0, j = 0, l = vertices.length; i < l; i ++, j += 3 ) {
 
-        renderer.render(scene, camera);
-        controls.update();
-        requestAnimationFrame(render);
-      }
+					vertices[ j + 1 ] = data[ i ] * 10;
 
-      requestAnimationFrame(render);
+				}
+
+				texture = new THREE.CanvasTexture( generateTexture( data, worldWidth, worldDepth ) );
+
+				mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { wireframe:false, color: 0x1C3659 } ) );
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				controls = new FirstPersonControls( camera, renderer.domElement );
+				controls.movementSpeed = 150;
+				controls.lookSpeed = 0.1;
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+
+// postprocessing
+
+				composer = new EffectComposer( renderer );
+				composer.addPass( new RenderPass( scene, camera ) );
+
+				const effect1 = new ShaderPass( DotScreenShader );
+				effect1.uniforms[ 'scale' ].value = 4;
+				composer.addPass( effect1 );
+
+				const effect2 = new ShaderPass( RGBShiftShader );
+				effect2.uniforms[ 'amount' ].value = 0.0015;
+				composer.addPass( effect2 );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        composer.setSize( window.innerWidth, window.innerHeight );
+
+				controls.handleResize();
+
+			}
+
+			function generateHeight( width, height ) {
+
+				let seed = Math.PI / 4;
+				window.Math.random = function () {
+
+					const x = Math.sin( seed ++ ) * 5000;
+					return x - Math.floor( x );
+
+				};
+
+				const size = width * height, data = new Uint8Array( size );
+				const perlin = new ImprovedNoise(), z = Math.random() * 100;
+
+				let quality = 1;
+
+				for ( let j = 0; j < 4; j ++ ) {
+
+					for ( let i = 0; i < size; i ++ ) {
+
+						const x = i % width, y = ~ ~ ( i / width );
+						data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
+
+					}
+
+					quality *= 5;
+
+				}
+
+				return data;
+
+			}
+
+			function generateTexture( data, width, height ) {
+
+				let context, image, imageData, shade;
+
+				const vector3 = new THREE.Vector3( 0, 0, 0 );
+
+				const sun = new THREE.Vector3( 1, 1, 1 );
+				sun.normalize();
+
+				const canvas = document.createElement( 'canvas' );
+				canvas.width = width;
+				canvas.height = height;
+
+        context = canvas.getContext( '2d' );
+        
+       	context.fillRect(0, 0, canvas.width, canvas.height );
+
+				image = context.getImageData( 0, 0, canvas.width, canvas.height );
+				imageData = image.data;
+
+				for ( let i = 0, j = 0, l = imageData.length; i < l; i += 4, j ++ ) {
+
+					vector3.x = data[ j - 2 ] - data[ j + 2 ];
+					vector3.y = 2;
+					vector3.z = data[ j - width * 2 ] - data[ j + width * 2 ];
+					vector3.normalize();
+
+					shade = vector3.dot( sun );
+
+					imageData[ i ] = ( shade * 43 ) * ( 0.5 + data[ j ] * 0.007 );
+					imageData[ i + 1 ] = ( shade * 83) * ( 0.5 + data[ j ] * 0.007 );
+					imageData[ i + 2 ] = ( shade * 138 ) * ( 0.5 + data[ j ] * 0.007 );
+
+				}
+
+				context.putImageData( image, 0, 0 );
+
+				return canvas;
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+        composer.render();
+				render();
+				stats.update();
+
+			}
+
+
+			function render() {
+
+				controls.update( clock.getDelta() );
+				renderer.render( scene, camera );
+
+			}
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-#c {
+.container {
   width: 100%;
   height: 100%;
   display: block;
