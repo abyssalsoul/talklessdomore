@@ -1,14 +1,15 @@
 <template>
-  <Three3D/>
+  <Login></Login>
 </template>
 
 <script>
-import Three3D from './components/Three3D.vue'
+
+import Login from './components/Login.vue'
 
 export default {
   name: 'App',
   components: {
-    Three3D,
+    Login,
   }
 }
 </script>

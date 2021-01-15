@@ -1,21 +1,20 @@
 <template>
   <div id="container"></div>
-   <canvas id="particle" width="20" height="20"></canvas>
-</template>
+  </template>
 
 <script>
 import * as THREE from "three";
-import { OceanBed } from "./OceanBed.js";
-import { PostProcessing } from "./PostProcessing.js";
-import { Particles } from "./particles.js";
+import { OceanBed } from "./js/OceanBed.js";
+import { PostProcessing } from "./js/PostProcessing.js";
+import { Particles } from "./js/Particles.js";
+import {AudioHandler} from "./js/AudioHandler.js";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
-
 let container, stats;
 let camera, controls, scene, renderer, postProcessing, particles;
 
 export default {
-  name: "Three3d",
+  name: "Three3D",
   data() {
     return {};
   },
@@ -41,6 +40,7 @@ export default {
      scene.fog = new THREE.FogExp2(color, 0.0035);
 
       var ground = new OceanBed(camera, scene);
+      var audio = new AudioHandler(camera, scene, renderer, true);
  
       renderer = new THREE.WebGLRenderer();
       renderer.setPixelRatio(window.devicePixelRatio);

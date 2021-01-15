@@ -61,8 +61,8 @@ export class Particles {
 
     parameters = [
            [new THREE.Color(0x3293ed), sprite, 50], // BLEU
-           [new THREE.Color(0x3293ed), sprite, 30], // BLEU
-           [new THREE.Color(0x3293ed), sprite, 20], // BLEU
+           [new THREE.Color(0xff0000), sprite, 30], // BLEU
+           [new THREE.Color(0x00FF00), sprite, 20], // BLEU
     ];
 
     for (let i = 0; i < parameters.length; i++) {
@@ -99,7 +99,8 @@ export class Particles {
 
     for (let i = 0; i < this.materials.length; i++) {
       const color = parameters[i][0];
-      var hsl = color.getHSL();
+      var hsl = new Object();
+      color.getHSL(hsl);
 
       const l = ((100 * (hsl.l + time)) % 100) / 100;
       //this.materials[i].color.setHSL(hsl.h, hsl.s, l);
