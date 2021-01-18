@@ -16,11 +16,6 @@ module.exports = {
        .use("url-loader")
        .loader("url-loader")
       .end();
-      config.module
-      .rule("mp3")
-      .test(/\.mp3$/)
-      .use("url-loader")
-      .loader("url-loader")
-     .end();
+     
    }
   };

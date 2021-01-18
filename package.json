@@ -5,7 +5,7 @@
     "serve": "vue-cli-service serve"
   },
   "dependencies": {
-    "file-loader": "^6.2.0",
+    "animejs": "^3.2.1",
     "gl-context": "^0.1.1",
     "gl-shader": "^4.2.1",
     "glsl-noise": "0.0.0",
@@ -15,7 +15,7 @@
     "three-orbitcontrols": "^2.110.3",
     "url-loader": "^4.1.1",
     "vue": "^3.0.4",
-    "vuetify": "^2.4.2",
+    "vue-router": "^4.0.3",
     "webpack-glsl-loader": "^1.0.1"
   },
   "devDependencies": {
