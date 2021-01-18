@@ -7,16 +7,16 @@
 <script>
 import anime from "animejs";
 export default {
-  name: "Particles",
+  name: "NoiseCircle",
   components: {},
   data: function () {
     var defaultSides = 80;
-    var stats = Array.apply(null, { length: defaultSides }).map(function () {
+    var edge = Array.apply(null, { length: defaultSides }).map(function () {
       return 100;
     });
     return {
-      stats: stats,
-      points: generatePoints(stats),
+      edge: edge,
+      points: generatePoints(edge),
       sides: defaultSides,
       minRadius: 90,
       interval: null,
@@ -24,35 +24,45 @@ export default {
     };
   },
 
-  mounted: function () {
-    this.randomizeStats();
-    this.animeState(this.stats);
-  },
+  mounted: function () {},
   methods: {
-    randomizeStats: function () {
-      var vm = this;
-      this.stats = this.stats.map((x) => (x = vm.newRandomValue()));
+    begin: function () {
+      this.isStopped = false;
+      this.randomize();
+      this.startAnimation(this.edge);
     },
+    stop: function () {
+      this.isStopped = true;
+    },
+    randomize: function () {
+      var vm = this;
+       this.edge = this.edge.map((x) => (x = vm.newRandomValue()));
+     },
 
-    animeState: function (newStats) {
-      var anim = anime({
+    startAnimation: function (newedge) {
+      this.anim = anime({
         direction: "alternate",
         targets: this.$data,
-        points: generatePoints(newStats),
+        points: generatePoints(newedge),
         easing: "easeInOutQuart",
         duration: this.duration,
         baseFrequency: 0,
-        loop: false,
-        complete: this.OnCompleted,
+        complete: this.onCompleted,
+        loop:false
       });
     },
     newRandomValue: function () {
       return Math.ceil(this.minRadius + Math.random() * (100 - this.minRadius));
     },
-    OnCompleted: function (anim) {
+  
+    onCompleted: function (anim) {
       var vm = this;
-      this.randomizeStats();
-      this.animeState(this.stats);
+      if (this.isStopped) {
+         this.edge = this.edge.map((x) => (x = 100));
+      } else {
+        this.randomize();
+      }
+      this.startAnimation(this.edge);
     },
   },
 };
@@ -68,9 +78,9 @@ function valueToPoint(value, index, total) {
   return { x: tx, y: ty };
 }
 
-function generatePoints(stats) {
-  var total = stats.length;
-  return stats
+function generatePoints(edge) {
+  var total = edge.length;
+  return edge
     .map(function (stat, index) {
       var point = valueToPoint(stat, index, total);
       return point.x + "," + point.y;
@@ -85,5 +95,4 @@ svg {
 polygon {
   fill: #0f2b57;
 }
-
 </style>

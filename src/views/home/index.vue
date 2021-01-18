@@ -1,44 +1,59 @@
 <template>
-  <div class="center">
-    <button id="svgButton" v-on:click="Start">
+  <p id="abyssal">{{ hover }}</p>
+  <div>
+    <button
+      id="svgButton"
+      @click="Start"
+      @mouseover="hover = true"
+      @mouseleave="hover = false"
+    >
       <p id="abyssal">Abysse</p>
-      <Particles></Particles>
+      <NoiseCircle ref="noise" />
     </button>
     <span class="sr-only">Click to start</span>
   </div>
 </template>
 
 <script>
-import Particles from "./../particles";
+import NoiseCircle from "./../NoiseCircle";
 import { AudioHandler } from "./../../components/audiohandler.js";
 export default {
   name: "Login",
-  components: { Particles },
+  components: { NoiseCircle },
   data() {
-    return {};
+    return {
+      hover: false,
+    };
   },
   mounted() {
     this.init();
   },
+  watch: {
+    hover: function (val) {
+      if (val == true) {
+        this.$refs.noise.begin();
+      } else {
+        this.$refs.noise.stop();
+      }
+    },
+  },
   methods: {
     init() {},
     Start() {
+      
       this.$router.push("/navigation");
+    },
+    OnMouseOver() {
+      console.log("begin");
+    },
+    OnMouseLeave() {
+      console.log("leave");
     },
   },
 };
 </script>
 <style lang="scss">
-.center {
-  margin: 0 auto;
-  border-radius: 3px;
-  justify-content: center;
-  align-content: center;
-  align-items: center;
-  text-align: center;
-  min-height: 100vh;
-  display: flex;
-}
+
 #abyssal {
   font: bold 10px sans-serif;
   letter-spacing: 10px;
@@ -48,7 +63,6 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
   user-select: none;
-
 }
 #svgButton {
   border: none;
@@ -58,7 +72,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
   /* position the div in center */
   position: absolute;
   top: 50%;
