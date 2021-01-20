@@ -13,22 +13,31 @@ export class OceanBed {
     camera.position.set(100, 800, -800);
     camera.lookAt(-100, 810, -800);
 
-    const geometry = new THREE.PlaneBufferGeometry(7500, 7500,  worldWidth - 1,  worldDepth - 1 );
+    const geometry = new THREE.PlaneBufferGeometry(
+      7500,
+      7500,
+      worldWidth - 1,
+      worldDepth - 1
+    );
     geometry.rotateX(-Math.PI / 2);
 
     const vertices = geometry.attributes.position.array;
 
-     for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+    for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
       vertices[j + 1] = data[i] * 10;
     }
 
-    //   texture = new THREE.CanvasTexture(
-    //     generateTexture(data, worldWidth, worldDepth)
-    //   );
+    // this.texture = new THREE.CanvasTexture(
+    //   this.generateTexture(data, worldWidth, worldDepth)
+    // );
 
     mesh = new THREE.Mesh(
       geometry,
-      new THREE.MeshBasicMaterial({ wireframe: true, color: bgColor })
+      new THREE.MeshBasicMaterial({
+        wireframe: true,
+        color: bgColor,
+        map: this.texture,
+      })
     );
     scene.add(mesh);
   }
@@ -97,5 +106,25 @@ export class OceanBed {
     context.putImageData(image, 0, 0);
 
     return canvas;
+  }
+  animate(audio) {
+    const time = Date.now() * 0.00000001;
+    const average = audio.getAverageFrequency() / 100;
+    if (average == 0.0) return;
+   
+    for (
+      let i = 0, j = 0, l = mesh.geometry.attributes.position.array.length;
+      i < l;
+      i++, j += 3
+    ) {
+      mesh.geometry.attributes.position.array[j + 1] += (Math.random() - 0.5) * average;
+    }
+    mesh.geometry.attributes.position.needsUpdate = true;
+    /*  var color = new Object();
+    mesh.material.color.getHSL(color);
+   
+    const l = Math.cos(((100 * (color.l + time)) % 100) / 100);
+    console.log(l);
+    mesh.material.color.setHSL(color.h, color.s, l); */
   }
 }

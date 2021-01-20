@@ -1,23 +1,24 @@
 import * as THREE from "three";
-let parameters;
+let parameters, texture;
 
 export class Particles {
-  constructor(camera, scene) {
+  constructor(camera, scene, audio) {
     this.camera = camera;
     this.scene = scene;
+    this.audio = audio;
     this.materials = [];
     this.init();
   }
-  createParticle() {
-    var canvas = document.createElement("canvas");
-    canvas.width = 100;
-    canvas.height = 100;
+  createParticle(canvas, audiodata) {
+    canvas.width = 200;
+    canvas.height = 200;
     var context = canvas.getContext("2d");
     var x = canvas.width / 2;
     var y = canvas.height / 2;
     var innerRadius = 10,
-      outerRadius = 50,
-      radius = 60;
+      outerRadius = 40,
+      size = 80 ;
+   
 
     var gradient = context.createRadialGradient(
       x,
@@ -30,13 +31,7 @@ export class Particles {
     gradient.addColorStop(0, "white");
     gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-    //context.arc(x, y, radius, 0, 2 * Math.PI);
-    // Add 2 color stops
-
-    
-
-    var numberOfSides = 10,
-      size = 20,
+    var numberOfSides = 20,
       Xcenter = x,
       Ycenter = y;
 
@@ -45,23 +40,25 @@ export class Particles {
 
     for (var i = 1; i <= numberOfSides; i += 1) {
       context.lineTo(
-        Xcenter + size * Math.cos((i * 2 * Math.PI) / numberOfSides),
-        Ycenter + size * Math.sin((i * 2 * Math.PI) / numberOfSides)
+        Xcenter +
+          size * Math.cos((i * 2 * Math.PI) / numberOfSides) +
+          Math.random() * 20,
+        Ycenter +
+          size * Math.sin((i * 2 * Math.PI) / numberOfSides) +
+          Math.random() * 20
       );
     }
     context.fillStyle = gradient;
-    context.fill(); 
+    context.fill();
     return canvas;
   }
   init() {
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
-
-    var particle = this.createParticle();
-
-    const sprite = new THREE.CanvasTexture(particle);
+    this.canvas = document.createElement("canvas");
+    texture = new THREE.CanvasTexture(this.createParticle(this.canvas, null));
     const particleCube = 10000;
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 1000; i++) {
       const x =
         this.camera.position.x + (Math.random() * particleCube + particleCube);
       const y =
@@ -78,32 +75,35 @@ export class Particles {
     );
 
     parameters = [
-      [new THREE.Color(0x3293ed), sprite, 100], // BLEU
-      [new THREE.Color(0xff0000), sprite, 200], // BLEU
-      [new THREE.Color(0x00ff00), sprite, 300], // BLEU
+      [new THREE.Color(0x3293ed), texture, 300], // BLEU
+      [new THREE.Color(0xff0000), texture, 200], // BLEU
+      [new THREE.Color(0x00FF00), texture, 400], // BLEU
     ];
 
     for (let i = 0; i < parameters.length; i++) {
       const color = parameters[i][0];
-      const sprite = parameters[i][1];
+      const texture = parameters[i][1];
       const size = parameters[i][2];
 
       this.materials[i] = new THREE.PointsMaterial({
         size: size,
-        map: sprite,
+        map: texture,
         blending: THREE.AdditiveBlending,
         depthTest: false,
-        transparent: true,
         color: color,
       });
 
       const particles = new THREE.Points(geometry, this.materials[i]);
+      particles.name = "particle_" + i;
       geometry.center();
       this.scene.add(particles);
     }
   }
   render() {
     const time = Date.now() * 0.00005;
+    var audioData = this.audio.getAverageFrequency();
+    this.createParticle(this.canvas, audioData);
+    texture.needsUpdate = true;
 
     for (let i = 0; i < this.scene.children.length; i++) {
       const object = this.scene.children[i];
@@ -119,8 +119,8 @@ export class Particles {
       var hsl = new Object();
       color.getHSL(hsl);
 
-      const l = ((100 * (hsl.l + time)) % 100) / 100;
-      //this.materials[i].color.setHSL(hsl.h, hsl.s, l);
+      const l = audioData / 100 - 0.3;
+      this.materials[i].color.setHSL(hsl.h, hsl.s, l);
     }
   }
 }

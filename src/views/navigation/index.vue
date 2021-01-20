@@ -38,13 +38,15 @@ export default {
       this.scene.background = color;
       this.scene.fog = new THREE.FogExp2(color, 0.0035);
 
-      var ground = new OceanBed(this.camera, this.scene);
+      this.audio = new AudioHandler(this.camera, true);
+
+      this.ground = new OceanBed(this.camera, this.scene);
 
       this.renderer = new THREE.WebGLRenderer();
       this.renderer.setPixelRatio(window.devicePixelRatio);
       this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-      this.particles = new Particles(this.camera, this.scene);
+      this.particles = new Particles(this.camera, this.scene, this.audio);
       this.postProcessing = new PostProcessing(this.camera,this. scene,this.renderer, true);
       //
       this.container.appendChild(this.renderer.domElement);
@@ -71,13 +73,15 @@ export default {
     play: function (event) {
      if(!this.isplaying)
      {
-      this.audio = new AudioHandler(this.camera, this.scene, this.renderer, true);
+      this.audio.play();
       this.isplaying = true;
      }
     },
     animate: function () {
       var vm = this.animate;
+      
       requestAnimationFrame(vm);
+      this.ground.animate(this.audio);
       this.render();
       this.stats.update();
     },
