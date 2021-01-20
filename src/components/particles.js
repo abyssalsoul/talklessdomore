@@ -30,12 +30,27 @@ export class Particles {
     gradient.addColorStop(0, "white");
     gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-    context.arc(x, y, radius, 0, 2 * Math.PI);
+    //context.arc(x, y, radius, 0, 2 * Math.PI);
     // Add 2 color stops
 
-    context.fillStyle = gradient;
+    
 
-    context.fill();
+    var numberOfSides = 10,
+      size = 20,
+      Xcenter = x,
+      Ycenter = y;
+
+    context.beginPath();
+    context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
+
+    for (var i = 1; i <= numberOfSides; i += 1) {
+      context.lineTo(
+        Xcenter + size * Math.cos((i * 2 * Math.PI) / numberOfSides),
+        Ycenter + size * Math.sin((i * 2 * Math.PI) / numberOfSides)
+      );
+    }
+    context.fillStyle = gradient;
+    context.fill(); 
     return canvas;
   }
   init() {
@@ -46,10 +61,13 @@ export class Particles {
 
     const sprite = new THREE.CanvasTexture(particle);
     const particleCube = 10000;
-    for (let i = 0; i < 5000; i++) {
-      const x = (this.camera.position.x ) + (Math.random() *particleCube  + particleCube) ;
-      const y =  (this.camera.position.y ) + (Math.random() *particleCube  + particleCube);
-      const z =  (this.camera.position.z ) + (Math.random() *particleCube  + particleCube);
+    for (let i = 0; i < 10000; i++) {
+      const x =
+        this.camera.position.x + (Math.random() * particleCube + particleCube);
+      const y =
+        this.camera.position.y + (Math.random() * particleCube + particleCube);
+      const z =
+        this.camera.position.z + (Math.random() * particleCube + particleCube);
 
       vertices.push(x, y, z);
     }
@@ -60,9 +78,9 @@ export class Particles {
     );
 
     parameters = [
-           [new THREE.Color(0x3293ed), sprite, 50], // BLEU
-           [new THREE.Color(0xff0000), sprite, 30], // BLEU
-           [new THREE.Color(0x00FF00), sprite, 20], // BLEU
+      [new THREE.Color(0x3293ed), sprite, 100], // BLEU
+      [new THREE.Color(0xff0000), sprite, 200], // BLEU
+      [new THREE.Color(0x00ff00), sprite, 300], // BLEU
     ];
 
     for (let i = 0; i < parameters.length; i++) {
@@ -93,7 +111,6 @@ export class Particles {
       if (object instanceof THREE.Points) {
         object.rotation.x = time * (i + 1);
         object.rotation.z = time * (i + 1);
-        
       }
     }
 

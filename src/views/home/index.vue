@@ -1,13 +1,13 @@
 <template>
-  <p id="abyssal">{{ hover }}</p>
-  <div>
+  <div class="center">
     <button
-      id="svgButton"
+      class="starter"
       @click="Start"
+      id="svgButton"
       @mouseover="hover = true"
       @mouseleave="hover = false"
     >
-      <p id="abyssal">Abysse</p>
+      <p id="abyssal">START</p>
       <NoiseCircle ref="noise" />
     </button>
     <span class="sr-only">Click to start</span>
@@ -15,6 +15,7 @@
 </template>
 
 <script>
+import anime from "animejs";
 import NoiseCircle from "./../NoiseCircle";
 import { AudioHandler } from "./../../components/audiohandler.js";
 export default {
@@ -40,20 +41,32 @@ export default {
   methods: {
     init() {},
     Start() {
-      
+      var logEl = document.querySelector(".starter");
+      console.log(logEl);
+      this.anim = anime({
+        targets: logEl,
+        scaleX: 3,
+        scaleY: 3,
+        opacity: 0,
+        easing: "easeInExpo",
+        duration: 1000,
+        complete: this.onCompleted,
+        loop: false,
+      });
+    },
+    onCompleted() {
       this.$router.push("/navigation");
-    },
-    OnMouseOver() {
-      console.log("begin");
-    },
-    OnMouseLeave() {
-      console.log("leave");
     },
   },
 };
 </script>
 <style lang="scss">
-
+.center {
+  height:100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 #abyssal {
   font: bold 10px sans-serif;
   letter-spacing: 10px;
@@ -75,9 +88,7 @@ export default {
 
   /* position the div in center */
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+
   &:focus {
     outline: 0px;
   }
